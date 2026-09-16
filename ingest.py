@@ -13,4 +13,23 @@ def find_rst_headers(lines):
 
     return headers
 
+def extract_sections(lines, headers):
+    sections = []
+    for h in range(len(headers)):
+        header_text = headers[h][0]
+        header_index = headers[h][1]
+        body_start = header_index + 2  #skip past header text + underline
+
+        if h+1 >= len(headers):
+            body_end = len(lines) #no next header, so go to the end of the file
+        else:
+            body_end = headers[h+1][1]  # stop right before the next header starts
+        body_lines = lines[body_start : body_end]
+        body_text = "\n".join(body_lines).strip()
+
+        sections.append([header_text, body_text])
+
+    return sections
+
+
 
