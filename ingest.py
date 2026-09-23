@@ -1,3 +1,29 @@
+from pathlib import Path
+
+def find_files(root_dir):
+    file_paths = []
+    for path in Path(root_dir).rglob("*"):
+        if path.suffix in [".md", ".rst"]:
+            file_paths.append(path)
+
+    return file_paths
+
+def process_file(filepath):
+    with open(filepath, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+        if filepath.suffix == ".rst":
+            headers = find_rst_headers(lines)
+            header_line_count = 2
+        elif filepath.suffix == ".md":
+            headers = find_markdown_headers(lines)
+            header_line_count = 1
+        else:
+            raise ValueError(f"Unsupported file type: {filepath.suffix}")
+
+        sections = extract_sections(lines, headers, header_line_count)
+        return sections
+
 def find_rst_headers(lines):
     headers = []
     for i in range(len(lines)):
@@ -13,12 +39,12 @@ def find_rst_headers(lines):
 
     return headers
 
-def extract_sections(lines, headers):
+def extract_sections(lines, headers, header_line_count):
     sections = []
     for h in range(len(headers)):
         header_text = headers[h][0]
         header_index = headers[h][1]
-        body_start = header_index + 2  #skip past header text + underline
+        body_start = header_index + header_line_count  #skip past header text + underline if rst
 
         if h+1 >= len(headers):
             body_end = len(lines) #no next header, so go to the end of the file
@@ -30,6 +56,19 @@ def extract_sections(lines, headers):
         sections.append([header_text, body_text])
 
     return sections
+
+def find_markdown_headers(lines):
+    headers = []
+    for i in range(len(lines)):
+        cur_line = lines[i]
+        if cur_line == "":
+            continue
+        if cur_line.startswith("#"):
+            level = len(cur_line) - len(cur_line.lstrip("#"))
+            header_text = cur_line.strip().strip("#").strip()
+            headers.append([header_text, i, level])
+    return headers
+
 
 
 
