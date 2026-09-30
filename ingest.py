@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 def find_files(root_dir):
     file_paths = []
@@ -22,7 +23,12 @@ def process_file(filepath):
             raise ValueError(f"Unsupported file type: {filepath.suffix}")
 
         sections = extract_sections(lines, headers, header_line_count)
-        return sections
+        clean_sections = []
+        for section in sections:
+            section[1] = clean_text(section[1])
+            if section[1].strip() != '':
+                clean_sections.append(section)
+        return clean_sections
 
 def find_rst_headers(lines):
     headers = []
@@ -69,6 +75,28 @@ def find_markdown_headers(lines):
             headers.append([header_text, i, level])
     return headers
 
-
-
-
+def clean_text(text):
+    #split text into individual lines
+    lines = text.splitlines()
+    cleaned_lines = []
+    for line in lines:
+        stripped_line = line.strip()
+        if stripped_line.startswith("::: "):
+            continue
+        elif re.match(r"^:\w+:.*", stripped_line):
+            continue
+        elif stripped_line.startswith("..") and "::" in stripped_line:
+            continue
+        elif stripped_line.startswith("!!!"):
+            continue
+        else:
+            stripped_line = re.sub(r":ref:`([^<]+)<[^>]+>`", r"\1", stripped_line)
+            stripped_line = re.sub(r"\*\*(.+?)\*\*", r"\1", stripped_line)
+            stripped_line = re.sub(r"\*([^\s*][^*]*?)\*", r"\1", stripped_line)
+            cleaned_lines.append(stripped_line)
+        
+    cleaned_text = "\n".join(cleaned_lines)
+    cleaned_text = re.sub(r"\n{3,}", "\n\n", cleaned_text) #remove extra new lines
+    cleaned_text = re.sub(r" {2,}", " ", cleaned_text) # remove extra spaces
+    cleaned_text = cleaned_text.strip()
+    return cleaned_text
