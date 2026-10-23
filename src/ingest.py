@@ -120,7 +120,7 @@ def clean_text(text):
         stripped_line = line.strip()
         if stripped_line.startswith("::: "):
             continue
-        elif re.match(r"^:\w+:.*", stripped_line):
+        elif re.match(r"^:\w+:(\s|$)", stripped_line):
             continue
         elif stripped_line.startswith("..") and "::" in stripped_line:
             continue
@@ -140,7 +140,16 @@ def clean_text(text):
 
 if __name__ == "__main__":
     chunks = build_chunks("data/raw")
-    print(f"Built {len(chunks)} chunks from the documents.")
-    print("Average chunk length:", sum(len(chunk["text"].split()) for chunk in chunks) / len(chunks))
-    print("Word count for largest chunk:", max(len(chunk["text"].split()) for chunk in chunks))
-    print(chunks.random.sample(chunks, 3))  # Print 3 random chunks for inspection
+
+    if not chunks:
+        print("No chunks were built. Check that data/raw has .rst or .md files.")
+    else:
+        print(f"Built {len(chunks)} chunks from the documents.")
+        word_counts = [len(chunk["text"].split()) for chunk in chunks]
+        print("Average chunk length:", sum(word_counts) / len(word_counts))
+        print("Word count for largest chunk:", max(word_counts))
+
+        for chunk in random.sample(chunks, min(3, len(chunks))):
+            print("---")
+            print(chunk["id"])
+            print(chunk["text"])
