@@ -4,7 +4,7 @@ from ingest import build_chunks
 
 def build_index():
     chunks = build_chunks("data/raw")
-    model = SentenceTransformer("all-MiniLM_L6-v2")
+    model = SentenceTransformer("all-MiniLM-L6-v2")
     client = chromadb.PersistentClient(path="chroma_db")
     try:
         client.delete_collection("docs")
@@ -20,9 +20,9 @@ def build_index():
             ids = [chunk["id"] for chunk in batch],
             documents = [chunk["text"] for chunk in batch],
             embeddings = embeddings[i: i+100],
-            metadocs = [{"source": chunk["source"], "section": chunk["section"], "chunk_index": chunk["chunk_index"]} for chunk in batch]
+            metadatas = [{"source": chunk["source"], "section": chunk["section"], "chunk_index": chunk["chunk_index"]} for chunk in batch]
         )
-        print("Indexed", collection.count(), "chunks")
+    print("Indexed", collection.count(), "chunks")
 
-    if __name__ == "__main__":
-        build_index()
+if __name__ == "__main__":
+    build_index()
